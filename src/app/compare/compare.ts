@@ -1,5 +1,6 @@
 import { JsonType, JsonValue, jsonTypeOf } from './json-value';
 import { formatPath } from './json-path';
+import { assertJsonDepth } from './json-depth';
 
 export interface AddedDifference {
   readonly kind: 'added';
@@ -23,6 +24,8 @@ export interface TypeChangedDifference {
 export type Difference = AddedDifference | RemovedDifference | TypeChangedDifference;
 
 export function compareJson(baseline: JsonValue, updated: JsonValue): readonly Difference[] {
+  assertJsonDepth(baseline);
+  assertJsonDepth(updated);
   const differences: Difference[] = [];
   visit([], baseline, updated, differences);
   return differences;
@@ -58,7 +61,11 @@ function visit(
     } else if (inUpdated) {
       differences.push({ kind: 'added', path: childPath, updatedType: jsonTypeOf(updated[key]) });
     } else {
-      differences.push({ kind: 'removed', path: childPath, baselineType: jsonTypeOf(baseline[key]) });
+      differences.push({
+        kind: 'removed',
+        path: childPath,
+        baselineType: jsonTypeOf(baseline[key]),
+      });
     }
   }
 }

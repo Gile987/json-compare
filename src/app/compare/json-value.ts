@@ -1,10 +1,7 @@
+import { assertJsonDepth, MAX_JSON_DEPTH } from './json-depth';
+
 export type JsonValue =
-  | null
-  | boolean
-  | number
-  | string
-  | JsonValue[]
-  | { [key: string]: JsonValue };
+  null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
 export type JsonType = 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null';
 
@@ -30,6 +27,10 @@ export function jsonTypeOf(value: JsonValue): JsonType {
 }
 
 export function isJsonValue(value: unknown): value is JsonValue {
+  return isJsonValueAtDepth(value, 0);
+}
+
+function isJsonValueAtDepth(value: unknown, depth: number): value is JsonValue {
   if (value === null) {
     return true;
   }
@@ -40,14 +41,17 @@ export function isJsonValue(value: unknown): value is JsonValue {
     case 'number':
       return Number.isFinite(value);
     case 'object': {
+      if (depth >= MAX_JSON_DEPTH) {
+        return false;
+      }
       if (Array.isArray(value)) {
-        return value.every(isJsonValue);
+        return value.every((child) => isJsonValueAtDepth(child, depth + 1));
       }
       const prototype: unknown = Object.getPrototypeOf(value);
       if (prototype !== Object.prototype && prototype !== null) {
         return false;
       }
-      return Object.values(value).every(isJsonValue);
+      return Object.values(value).every((child) => isJsonValueAtDepth(child, depth + 1));
     }
     default:
       return false;
@@ -58,6 +62,7 @@ export function parseJson(text: string): ParseResult {
   let parsed: unknown;
   try {
     parsed = JSON.parse(text);
+    assertJsonDepth(parsed);
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : 'Invalid JSON.' };
   }

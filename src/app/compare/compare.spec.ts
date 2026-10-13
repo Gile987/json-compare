@@ -1,6 +1,15 @@
 import { compareJson, Difference } from './compare';
 import { JsonValue, parseJson } from './json-value';
 import { EXAMPLE_BASELINE, EXAMPLE_UPDATED } from './sample-data';
+import { JSON_DEPTH_ERROR, MAX_JSON_DEPTH } from './json-depth';
+
+function nestedValue(depth: number, leaf: JsonValue): JsonValue {
+  let value = leaf;
+  for (let level = 0; level < depth; level++) {
+    value = { child: value };
+  }
+  return value;
+}
 
 function parse(text: string): JsonValue {
   const result = parseJson(text);
@@ -20,6 +29,36 @@ function deepFreeze(value: unknown): void {
 }
 
 describe('compareJson', () => {
+  it('compares values at the maximum nesting depth', () => {
+    expect(compareJson(nestedValue(MAX_JSON_DEPTH, 0), nestedValue(MAX_JSON_DEPTH, '0'))).toEqual([
+      {
+        kind: 'type-changed',
+        path: '$' + '.child'.repeat(MAX_JSON_DEPTH),
+        baselineType: 'number',
+        updatedType: 'string',
+      },
+    ]);
+  });
+
+  it('rejects deeply nested matching objects before comparison can overflow the stack', () => {
+    const tooDeep = nestedValue(10_000, 0);
+    expect(() => compareJson(tooDeep, tooDeep)).toThrow(new RangeError(JSON_DEPTH_ERROR));
+  });
+
+  it('checks the full depth of both inputs, including added and removed branches', () => {
+    const tooDeep = nestedValue(MAX_JSON_DEPTH + 1, 0);
+    expect(() => compareJson({}, tooDeep)).toThrow(new RangeError(JSON_DEPTH_ERROR));
+    expect(() => compareJson(tooDeep, {})).toThrow(new RangeError(JSON_DEPTH_ERROR));
+  });
+
+  it('enforces the nesting limit inside arrays even though their contents are not compared', () => {
+    const atLimit = [nestedValue(MAX_JSON_DEPTH - 1, 0)];
+    const tooDeep = [nestedValue(MAX_JSON_DEPTH, 0)];
+    expect(compareJson(atLimit, [])).toEqual([]);
+    expect(() => compareJson([], tooDeep)).toThrow(new RangeError(JSON_DEPTH_ERROR));
+    expect(() => compareJson(tooDeep, [])).toThrow(new RangeError(JSON_DEPTH_ERROR));
+  });
+
   it('returns no changes for identical responses', () => {
     expect(compareJson(parse('{"a": 1, "b": [1, 2]}'), parse('{"a": 1, "b": [1, 2]}'))).toEqual([]);
   });
@@ -29,7 +68,9 @@ describe('compareJson', () => {
   });
 
   it('returns no changes for different primitive values of the same type', () => {
-    expect(compareJson(parse('{"a": 1, "b": "x", "c": true}'), parse('{"a": 2, "b": "y", "c": false}'))).toEqual([]);
+    expect(
+      compareJson(parse('{"a": 1, "b": "x", "c": true}'), parse('{"a": 2, "b": "y", "c": false}')),
+    ).toEqual([]);
   });
 
   it('reports nested additions, removals, and type changes with paths and types', () => {
@@ -157,11 +198,7 @@ describe('compareJson', () => {
       parse('{"d": 1, "c": {"x": 1}, "a": 1}'),
     );
     expect(first).toEqual(second);
-    expect(first.map((difference) => difference.path)).toEqual([
-      '$.b',
-      '$.c.y',
-      '$.d',
-    ]);
+    expect(first.map((difference) => difference.path)).toEqual(['$.b', '$.c.y', '$.d']);
   });
 
   it('yields exactly the five expected rows for the documented example', () => {
