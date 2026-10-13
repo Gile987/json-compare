@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
-import { Difference } from '../compare/compare';
+import type { Difference } from '../compare/compare';
 
 const CHANGE_PRESENTATION = {
   added: { label: 'Added', badgeClass: 'badge badge-added' },

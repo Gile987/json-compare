@@ -1,4 +1,4 @@
-import { JsonType, JsonValue, jsonTypeOf } from './json-value';
+import { jsonTypeOf, type JsonType, type JsonValue } from './json-value';
 import { formatPath } from './json-path';
 import { assertJsonDepth } from './json-depth';
 

@@ -1,5 +1,5 @@
-import { compareJson, Difference } from './compare';
-import { JsonValue, parseJson } from './json-value';
+import { compareJson, type Difference } from './compare';
+import { parseJson, type JsonValue } from './json-value';
 import { EXAMPLE_BASELINE, EXAMPLE_UPDATED } from './sample-data';
 import { JSON_DEPTH_ERROR, MAX_JSON_DEPTH } from './json-depth';
 

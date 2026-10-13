@@ -1,5 +1,5 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Difference } from '../compare/compare';
+import { TestBed, type ComponentFixture } from '@angular/core/testing';
+import type { Difference } from '../compare/compare';
 import { Results } from './results';
 
 describe('Results', () => {
