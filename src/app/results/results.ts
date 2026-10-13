@@ -1,6 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { Difference } from '../compare/compare';
 
+const CHANGE_PRESENTATION = {
+  added: { label: 'Added', badgeClass: 'badge badge-added' },
+  removed: { label: 'Removed', badgeClass: 'badge badge-removed' },
+  'type-changed': { label: 'Type changed', badgeClass: 'badge badge-type-changed' },
+} satisfies Record<Difference['kind'], { label: string; badgeClass: string }>;
+
+const MISSING_TYPE_LABEL = '—';
+
 @Component({
   imports: [],
   selector: 'app-results',
@@ -11,42 +19,24 @@ import { Difference } from '../compare/compare';
 export class Results {
   readonly differences = input.required<readonly Difference[] | null>();
 
-  protected readonly addedCount = computed(() => this.countKind('added'));
-  protected readonly removedCount = computed(() => this.countKind('removed'));
-  protected readonly typeChangedCount = computed(() => this.countKind('type-changed'));
-  protected readonly totalCount = computed(() => this.differences()?.length ?? 0);
-
-  protected labelOf(difference: Difference): string {
-    switch (difference.kind) {
-      case 'added':
-        return 'Added';
-      case 'removed':
-        return 'Removed';
-      case 'type-changed':
-        return 'Type changed';
+  protected readonly changePresentation = CHANGE_PRESENTATION;
+  protected readonly changeCounts = computed(() => {
+    const counts: Record<Difference['kind'], number> = {
+      added: 0,
+      removed: 0,
+      'type-changed': 0,
+    };
+    for (const difference of this.differences() ?? []) {
+      counts[difference.kind]++;
     }
-  }
-
-  protected badgeClassOf(difference: Difference): string {
-    switch (difference.kind) {
-      case 'added':
-        return 'badge badge-added';
-      case 'removed':
-        return 'badge badge-removed';
-      case 'type-changed':
-        return 'badge badge-type-changed';
-    }
-  }
+    return counts;
+  });
 
   protected baselineTypeOf(difference: Difference): string {
-    return difference.kind === 'added' ? '—' : difference.baselineType;
+    return difference.kind === 'added' ? MISSING_TYPE_LABEL : difference.baselineType;
   }
 
   protected updatedTypeOf(difference: Difference): string {
-    return difference.kind === 'removed' ? '—' : difference.updatedType;
-  }
-
-  private countKind(kind: Difference['kind']): number {
-    return (this.differences() ?? []).filter((difference) => difference.kind === kind).length;
+    return difference.kind === 'removed' ? MISSING_TYPE_LABEL : difference.updatedType;
   }
 }

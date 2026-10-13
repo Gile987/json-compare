@@ -7,9 +7,10 @@
         No structural differences found. Primitive values and array contents are not compared.
       </p>
     } @else {
+      @let counts = changeCounts();
       <p class="summary">
-        {{ totalCount() }} {{ totalCount() === 1 ? 'change' : 'changes' }}:
-        {{ addedCount() }} added, {{ removedCount() }} removed, {{ typeChangedCount() }} type
+        {{ diffs.length }} {{ diffs.length === 1 ? 'change' : 'changes' }}:
+        {{ counts.added }} added, {{ counts.removed }} removed, {{ counts['type-changed'] }} type
         changed
       </p>
       <div class="table-wrapper">
@@ -24,10 +25,11 @@
           </thead>
           <tbody>
             @for (diff of diffs; track diff.path) {
+              @let presentation = changePresentation[diff.kind];
               <tr>
                 <td class="path">{{ diff.path }}</td>
                 <td>
-                  <span [class]="badgeClassOf(diff)">{{ labelOf(diff) }}</span>
+                  <span [class]="presentation.badgeClass">{{ presentation.label }}</span>
                 </td>
                 <td>{{ baselineTypeOf(diff) }}</td>
                 <td>{{ updatedTypeOf(diff) }}</td>
