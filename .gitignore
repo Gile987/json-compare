@@ -25,6 +25,7 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
+/api-response-drift-plan.md
 /.angular/cache
 .sass-cache/
 /connect.lock
