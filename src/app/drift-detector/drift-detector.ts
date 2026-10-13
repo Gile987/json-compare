@@ -1,11 +1,9 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { compareJson, Difference } from '../compare/compare';
-import { JsonValue, parseJson } from '../compare/json-value';
+import { ParseResult, parseJson } from '../compare/json-value';
 import { EXAMPLE_BASELINE, EXAMPLE_UPDATED } from '../compare/sample-data';
 import { JsonEditor } from '../json-editor/json-editor';
 import { Results } from '../results/results';
-
-type SideValidation = { value: JsonValue } | { error: string };
 
 @Component({
   imports: [JsonEditor, Results],
@@ -25,15 +23,13 @@ export class DriftDetector {
   protected onCompare(): void {
     const baseline = this.validateSide(this.baselineText());
     const updated = this.validateSide(this.updatedText());
-    if ('error' in baseline || 'error' in updated) {
-      this.baselineError.set('error' in baseline ? baseline.error : null);
-      this.updatedError.set('error' in updated ? updated.error : null);
+    this.baselineError.set(baseline.ok ? null : baseline.message);
+    this.updatedError.set(updated.ok ? null : updated.message);
+    if (!baseline.ok || !updated.ok) {
       this.differences.set(null);
       this.statusMessage.set('Comparison could not run. Fix the highlighted JSON and try again.');
       return;
     }
-    this.baselineError.set(null);
-    this.updatedError.set(null);
     const differences = compareJson(baseline.value, updated.value);
     this.differences.set(differences);
     this.statusMessage.set(
@@ -68,11 +64,11 @@ export class DriftDetector {
     this.statusMessage.set('');
   }
 
-  private validateSide(text: string): SideValidation {
+  private validateSide(text: string): ParseResult {
     if (text.trim() === '') {
-      return { error: 'Paste a JSON response' };
+      return { ok: false, message: 'Paste a JSON response' };
     }
     const result = parseJson(text);
-    return result.ok ? { value: result.value } : { error: `Invalid JSON: ${result.message}` };
+    return result.ok ? result : { ok: false, message: `Invalid JSON: ${result.message}` };
   }
 }
