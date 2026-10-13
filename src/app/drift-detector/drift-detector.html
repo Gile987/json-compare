@@ -1,0 +1,41 @@
+<main class="page">
+  <header class="page-header">
+    <h1>API Response Drift Detector</h1>
+    <p class="intro">
+      Paste two JSON response samples to find structural differences that might affect a frontend
+      consumer. Changes to primitive values are ignored when their types stay the same.
+    </p>
+    <p class="intro">
+      This compares two samples, not API schemas. It cannot prove compatibility, infer optional
+      fields or nullability guarantees, or reliably detect renames. A renamed field appears as one
+      removal and one addition.
+    </p>
+  </header>
+
+  <div class="editors">
+    <app-json-editor
+      label="Baseline response"
+      editorId="baseline-editor"
+      [(value)]="baselineText"
+      (valueChange)="onEdited()"
+      [error]="baselineError()"
+    />
+    <app-json-editor
+      label="Updated response"
+      editorId="updated-editor"
+      [(value)]="updatedText"
+      (valueChange)="onEdited()"
+      [error]="updatedError()"
+    />
+  </div>
+
+  <div class="actions">
+    <button type="button" class="primary" (click)="onCompare()">Compare</button>
+    <button type="button" (click)="onLoadExample()">Load example</button>
+    <button type="button" (click)="onClear()">Clear</button>
+  </div>
+
+  <p class="visually-hidden" role="status">{{ statusMessage() }}</p>
+
+  <app-results [differences]="differences()" />
+</main>

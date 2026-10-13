@@ -1,0 +1,15 @@
+<div class="editor-field">
+  <label [for]="editorId()">{{ label() }}</label>
+  <textarea
+    [id]="editorId()"
+    [(ngModel)]="value"
+    spellcheck="false"
+    rows="14"
+    autocomplete="off"
+    [attr.aria-invalid]="error() !== null"
+    [attr.aria-describedby]="error() !== null ? editorId() + '-error' : null"
+  ></textarea>
+  @if (error(); as message) {
+    <p class="error" [id]="editorId() + '-error'">{{ message }}</p>
+  }
+</div>

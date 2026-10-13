@@ -1,0 +1,45 @@
+<section class="results" aria-labelledby="results-heading">
+  <h2 id="results-heading">Results</h2>
+  <p class="note">Arrays are compared by type only; their items are not inspected.</p>
+  @if (differences(); as diffs) {
+    @if (diffs.length === 0) {
+      <p class="zero">
+        No structural differences found. Primitive values and array contents are not compared.
+      </p>
+    } @else {
+      <p class="summary">
+        {{ totalCount() }} {{ totalCount() === 1 ? 'change' : 'changes' }}:
+        {{ addedCount() }} added, {{ removedCount() }} removed,
+        {{ typeChangedCount() }} type changed
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Path</th>
+              <th scope="col">Change</th>
+              <th scope="col">Baseline type</th>
+              <th scope="col">Updated type</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (diff of diffs; track diff.path) {
+              <tr>
+                <td class="path">{{ diff.path }}</td>
+                <td>
+                  <span [class]="badgeClassOf(diff)">{{ labelOf(diff) }}</span>
+                </td>
+                <td>{{ baselineTypeOf(diff) }}</td>
+                <td>{{ updatedTypeOf(diff) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  } @else {
+    <p class="placeholder">
+      Paste two JSON responses and choose Compare to see structural differences.
+    </p>
+  }
+</section>
