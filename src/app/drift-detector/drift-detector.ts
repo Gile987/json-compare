@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { compareJson, Difference } from '../compare/compare';
-import { ParseResult, parseJson } from '../compare/json-value';
+import { compareJson, type Difference } from '../compare/compare';
+import { parseJson, type ParseResult } from '../compare/json-value';
 import { EXAMPLE_BASELINE, EXAMPLE_UPDATED } from '../compare/sample-data';
 import { JsonEditor } from '../json-editor/json-editor';
 import { Results } from '../results/results';

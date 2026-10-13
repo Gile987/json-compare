@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TestBed, type ComponentFixture } from '@angular/core/testing';
 import { DriftDetector } from './drift-detector';
 import { JSON_DEPTH_ERROR } from '../compare/json-depth';
 
