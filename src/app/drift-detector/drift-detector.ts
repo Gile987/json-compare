@@ -20,7 +20,7 @@ export class DriftDetector {
   protected readonly differences = signal<readonly Difference[] | null>(null);
   protected readonly statusMessage = signal('');
 
-  protected onCompare(): void {
+  protected compareResponses(): void {
     const baseline = this.validateSide(this.baselineText());
     const updated = this.validateSide(this.updatedText());
     this.baselineError.set(baseline.ok ? null : baseline.message);
@@ -41,23 +41,19 @@ export class DriftDetector {
     );
   }
 
-  protected onLoadExample(): void {
+  protected loadExample(): void {
     this.baselineText.set(EXAMPLE_BASELINE);
     this.updatedText.set(EXAMPLE_UPDATED);
     this.clearOutput();
   }
 
-  protected onClear(): void {
+  protected clear(): void {
     this.baselineText.set('');
     this.updatedText.set('');
     this.clearOutput();
   }
 
-  protected onEdited(): void {
-    this.clearOutput();
-  }
-
-  private clearOutput(): void {
+  protected clearOutput(): void {
     this.baselineError.set(null);
     this.updatedError.set(null);
     this.differences.set(null);
