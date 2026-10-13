@@ -28,17 +28,20 @@ This compares two samples, not API schemas. It cannot prove compatibility, infer
 One page with a short title and explanation, two labeled multiline editors, and a results section.
 
 Editors:
+
 - Left: Baseline response.
 - Right: Updated response.
 - Monospaced text, comfortable height, visible labels, spellcheck disabled.
 - Side by side on desktop, stacked on narrow screens.
 
 Actions:
+
 - Compare: explicitly parses and compares both inputs.
 - Load example: fills both inputs with the sample below and clears previous results.
 - Clear: resets inputs, validation errors, and results.
 
 Results:
+
 - Show total changes and counts for Added, Removed, and Type changed.
 - Each row shows path, a text badge for the kind, baseline type, and updated type. Use an em dash for a missing side.
 - Use color only as a supplement to text labels.
@@ -49,6 +52,7 @@ Results:
 - Editing either input clears previous results and errors so stale comparisons are never shown as current.
 
 Validation:
+
 - Empty input produces a field-specific “Paste a JSON response” message.
 - Invalid JSON produces a field-specific error without crashing; validate both sides on Compare.
 - Accept all valid JSON root types, including arrays, primitives, and null.
@@ -69,10 +73,11 @@ Recognized types: object, array, string, number, boolean, null. Detect null and 
 6. If both values are arrays, emit no result and do not compare items, length, or order. An array changing to another type is still a Type changed result.
 7. If both values have the same primitive type, emit no result, regardless of their values.
 8. Missing and null are distinct. Use own-property checks, not truthiness or comparisons to null.
-9. Do not mutate either input. Handle keys such as __proto__, constructor, and hasOwnProperty as ordinary JSON keys without merging them into application objects.
+9. Do not mutate either input. Handle keys such as **proto**, constructor, and hasOwnProperty as ordinary JSON keys without merging them into application objects.
 10. Return deterministic output by visiting the union of object keys in ascending code-unit order.
 
 Paths:
+
 - Root is $.
 - Identifier-like keys matching [A-Za-z_$][A-Za-z0-9_$]* use dot notation, for example $.user.name.
 - Other keys use brackets with a JSON-escaped string, for example $["display.name"] or $[""].
@@ -115,13 +120,13 @@ Updated:
 
 Expected results in traversal order:
 
-| Path | Change | Baseline type | Updated type |
-| --- | --- | --- | --- |
-| $.permissions | Added | — | array |
-| $.price | Type changed | number | string |
-| $.user.address | Type changed | object | null |
-| $.user.displayName | Added | — | string |
-| $.user.name | Removed | string | — |
+| Path               | Change       | Baseline type | Updated type |
+| ------------------ | ------------ | ------------- | ------------ |
+| $.permissions      | Added        | —             | array        |
+| $.price            | Type changed | number        | string       |
+| $.user.address     | Type changed | object        | null         |
+| $.user.displayName | Added        | —             | string       |
+| $.user.name        | Removed      | string        | —            |
 
 Total: 5 changes, consisting of 2 added, 1 removed, and 2 type changes. Changes to user.id, active, and tags produce no results.
 
@@ -156,6 +161,7 @@ Complete these phases sequentially without requiring approval for each phase. If
 ## 8. Focused tests and acceptance criteria
 
 Engine tests must cover:
+
 - Identical responses and reordered object keys produce no changes.
 - Different primitive values of the same type produce no changes.
 - Nested additions, removals, and type changes return correct paths and types.
@@ -165,7 +171,7 @@ Engine tests must cover:
 - Array-to-object and root-level type changes are detected.
 - Primitive and null roots are supported.
 - Empty, dotted, quoted, and otherwise unusual property keys produce unambiguous escaped paths.
-- Special own keys such as __proto__ are compared correctly.
+- Special own keys such as **proto** are compared correctly.
 - Inputs remain unchanged and result order is deterministic.
 - The supplied example yields exactly the five expected rows.
 

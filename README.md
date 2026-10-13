@@ -18,11 +18,16 @@ Then open http://localhost:4200.
 
 ## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `npm start` | Dev server with live reload |
-| `npm run build` | Production build into `dist/` |
-| `npm test` | Unit tests (Vitest, single run in CI: `CI=true npm test`) |
+| Command                | Purpose                                                       |
+| ---------------------- | ------------------------------------------------------------- |
+| `npm start`            | Dev server with live reload                                   |
+| `npm run build`        | Production build into `dist/`                                 |
+| `npm test`             | Unit tests (Vitest, single run in CI: `CI=true npm test`)     |
+| `npm run format`       | Format source, configuration, and documentation with Prettier |
+| `npm run format:check` | Check formatting without changing files                       |
+
+The CI workflow checks formatting, runs the unit tests, and builds the application on pushes
+and pull requests.
 
 ## Behavior
 
@@ -31,10 +36,10 @@ Paste a baseline response on the left and an updated response on the right, then
 
 The comparison reports three kinds of structural differences:
 
-| Change | Meaning |
-| --- | --- |
-| Added | Key exists only in the updated object |
-| Removed | Key exists only in the baseline object |
+| Change       | Meaning                                                                       |
+| ------------ | ----------------------------------------------------------------------------- |
+| Added        | Key exists only in the updated object                                         |
+| Removed      | Key exists only in the baseline object                                        |
 | Type changed | Same path, different JSON type (object, array, string, number, boolean, null) |
 
 Rules of the engine:
@@ -48,6 +53,9 @@ Rules of the engine:
 - Primitive values of the same type are never reported, regardless of their values.
 - Missing and null are distinct; null and object are different types.
 - Any valid JSON root is accepted, including arrays, primitives, and null.
+- Input supports up to 100 nested objects or arrays, counting the root container as level one.
+  Deeper input shows an editor error. This limit also applies to array contents, although they
+  are not compared. Direct calls to `compareJson` throw a `RangeError` for over-limit input.
 - Editing either editor clears previous results and errors, so stale comparisons are never
   shown as current.
 
@@ -66,13 +74,13 @@ definitively breaking or safe.
 
 Choose **Load example**, then **Compare**. The sample yields five rows in traversal order:
 
-| Path | Change | Baseline type | Updated type |
-| --- | --- | --- | --- |
-| `$.permissions` | Added | — | array |
-| `$.price` | Type changed | number | string |
-| `$.user.address` | Type changed | object | null |
-| `$.user.displayName` | Added | — | string |
-| `$.user.name` | Removed | string | — |
+| Path                 | Change       | Baseline type | Updated type |
+| -------------------- | ------------ | ------------- | ------------ |
+| `$.permissions`      | Added        | —             | array        |
+| `$.price`            | Type changed | number        | string       |
+| `$.user.address`     | Type changed | object        | null         |
+| `$.user.displayName` | Added        | —             | string       |
+| `$.user.name`        | Removed      | string        | —            |
 
 Changes to `user.id`, `active`, and `tags` produce no results (same-type primitive values, and
 array contents are not inspected).

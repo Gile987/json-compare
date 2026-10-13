@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DriftDetector } from './drift-detector';
+import { JSON_DEPTH_ERROR } from '../compare/json-depth';
 
 describe('DriftDetector', () => {
   let fixture: ComponentFixture<DriftDetector>;
@@ -71,7 +72,9 @@ describe('DriftDetector', () => {
     expect(errorOf('updated-editor')).toBe('Paste a JSON response');
     expect(editor('baseline-editor').getAttribute('aria-invalid')).toBe('true');
     expect(editor('updated-editor').getAttribute('aria-invalid')).toBe('true');
-    expect(editor('baseline-editor').getAttribute('aria-describedby')).toBe('baseline-editor-error');
+    expect(editor('baseline-editor').getAttribute('aria-describedby')).toBe(
+      'baseline-editor-error',
+    );
     expect(resultRows()).toHaveLength(0);
   });
 
@@ -88,15 +91,34 @@ describe('DriftDetector', () => {
     );
   });
 
+  it.each(['baseline-editor', 'updated-editor'])(
+    'shows a depth error for %s and recovers after editing the input',
+    async (id) => {
+      await clickButton('Load example');
+      await clickButton('Compare');
+      expect(resultRows()).toHaveLength(5);
+
+      await setEditorValue(id, '['.repeat(10_000) + '0' + ']'.repeat(10_000));
+      await clickButton('Compare');
+      expect(errorOf(id)).toBe(`Invalid JSON: ${JSON_DEPTH_ERROR}`);
+      expect(editor(id).getAttribute('aria-invalid')).toBe('true');
+      expect(resultRows()).toHaveLength(0);
+
+      await setEditorValue('baseline-editor', '{}');
+      await setEditorValue('updated-editor', '{}');
+      await clickButton('Compare');
+      expect(errorOf(id)).toBeNull();
+      expect(page().textContent).toContain('No structural differences found');
+    },
+  );
+
   it('compares the loaded example and reports the five expected rows', async () => {
     await clickButton('Load example');
     expect(editor('baseline-editor').value).toContain('Mladen');
     expect(editor('updated-editor').value).toContain('Marko');
     await clickButton('Compare');
     expect(resultRows().length).toBe(5);
-    const paths = resultRows().map(
-      (row) => row.querySelector('.path')?.textContent?.trim() ?? '',
-    );
+    const paths = resultRows().map((row) => row.querySelector('.path')?.textContent?.trim() ?? '');
     expect(paths).toEqual([
       '$.permissions',
       '$.price',

@@ -1,4 +1,14 @@
 import { isJsonValue, jsonTypeOf, parseJson } from './json-value';
+import { JSON_DEPTH_ERROR, MAX_JSON_DEPTH } from './json-depth';
+
+function nestedJson(depth: number, containers: 'objects' | 'arrays' | 'mixed'): string {
+  let text = '0';
+  for (let level = 0; level < depth; level++) {
+    const useArray = containers === 'arrays' || (containers === 'mixed' && level % 2 === 0);
+    text = useArray ? `[${text}]` : `{"child":${text}}`;
+  }
+  return text;
+}
 
 describe('jsonTypeOf', () => {
   it('detects null before treating it as an object', () => {
@@ -28,6 +38,16 @@ describe('jsonTypeOf', () => {
 });
 
 describe('isJsonValue', () => {
+  it.each(['objects', 'arrays', 'mixed'] as const)(
+    'accepts %s at the nesting limit and rejects deeper values without throwing',
+    (containers) => {
+      const atLimit: unknown = JSON.parse(nestedJson(MAX_JSON_DEPTH, containers));
+      const tooDeep: unknown = JSON.parse(nestedJson(10_000, containers));
+      expect(isJsonValue(atLimit)).toBe(true);
+      expect(isJsonValue(tooDeep)).toBe(false);
+    },
+  );
+
   it('accepts every JSON value kind', () => {
     expect(isJsonValue(null)).toBe(true);
     expect(isJsonValue(true)).toBe(true);
@@ -62,6 +82,42 @@ describe('isJsonValue', () => {
 });
 
 describe('parseJson', () => {
+  it.each(['objects', 'arrays', 'mixed'] as const)(
+    'accepts %s at the nesting limit',
+    (containers) => {
+      expect(parseJson(nestedJson(MAX_JSON_DEPTH, containers)).ok).toBe(true);
+    },
+  );
+
+  it.each(['objects', 'arrays', 'mixed'] as const)(
+    'returns a useful error for %s one level beyond the limit',
+    (containers) => {
+      expect(parseJson(nestedJson(MAX_JSON_DEPTH + 1, containers))).toEqual({
+        ok: false,
+        message: JSON_DEPTH_ERROR,
+      });
+    },
+  );
+
+  it.each(['objects', 'arrays', 'mixed'] as const)(
+    'returns an error instead of overflowing the stack for 10,000 nested %s',
+    (containers) => {
+      expect(parseJson(nestedJson(10_000, containers))).toEqual({
+        ok: false,
+        message: JSON_DEPTH_ERROR,
+      });
+    },
+  );
+
+  it('counts empty objects and arrays as nesting levels', () => {
+    for (const leaf of ['{}', '[]']) {
+      const atLimit = '['.repeat(MAX_JSON_DEPTH - 1) + leaf + ']'.repeat(MAX_JSON_DEPTH - 1);
+      const tooDeep = '['.repeat(MAX_JSON_DEPTH) + leaf + ']'.repeat(MAX_JSON_DEPTH);
+      expect(parseJson(atLimit).ok).toBe(true);
+      expect(parseJson(tooDeep)).toEqual({ ok: false, message: JSON_DEPTH_ERROR });
+    }
+  });
+
   it('accepts every valid JSON root type', () => {
     const cases: readonly string[] = ['{}', '[]', '"text"', '42', '4.2', 'true', 'false', 'null'];
     for (const text of cases) {
