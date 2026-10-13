@@ -17,22 +17,22 @@
       label="Baseline response"
       editorId="baseline-editor"
       [(value)]="baselineText"
-      (valueChange)="onEdited()"
+      (valueChange)="clearOutput()"
       [error]="baselineError()"
     />
     <app-json-editor
       label="Updated response"
       editorId="updated-editor"
       [(value)]="updatedText"
-      (valueChange)="onEdited()"
+      (valueChange)="clearOutput()"
       [error]="updatedError()"
     />
   </div>
 
   <div class="actions">
-    <button type="button" class="primary" (click)="onCompare()">Compare</button>
-    <button type="button" (click)="onLoadExample()">Load example</button>
-    <button type="button" (click)="onClear()">Clear</button>
+    <button type="button" class="primary" (click)="compareResponses()">Compare</button>
+    <button type="button" (click)="loadExample()">Load example</button>
+    <button type="button" (click)="clear()">Clear</button>
   </div>
 
   <p class="visually-hidden" role="status">{{ statusMessage() }}</p>
